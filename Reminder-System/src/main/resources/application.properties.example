@@ -1,0 +1,23 @@
+# Disable JPA auto-config if present
+spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+server.port=8081
+
+# Mail configuration (configure with your SMTP)
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=
+spring.mail.password=
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+server.servlet.context-path=/
+
+app.mail.from=
+app.scheduler.enabled=true
+# every 20 seconds (for demo)
+app.scheduler.cron=0 57 23 * * *
+# Node backend endpoint that returns list of {name,email}
+app.backend.reminderListUrl=http://localhost:5000/api/reminders/today
+
+# MongoDB for reading active users
+spring.data.mongodb.uri=${MONGODB_URI:mongodb://localhost:27017/fitness-track-platform}
+spring.application.name=Reminder-System
