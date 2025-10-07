@@ -1,6 +1,34 @@
 const Activity = require('../models/Activity');
 const mongoose = require('mongoose');
 
+// Returns { range: { start, end }, totals: { steps, calories, workoutMinutes } }
+async function weeklyData(userId) {
+  const now = new Date();
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const start = new Date(end);
+  start.setUTCDate(end.getUTCDate() - 6);
+
+  const pipeline = [
+    { $match: { user: new mongoose.Types.ObjectId(userId), date: { $gte: start, $lte: end } } },
+    {
+      $group: {
+        _id: null,
+        steps: { $sum: '$steps' },
+        calories: { $sum: '$calories' },
+        workoutMinutes: { $sum: '$workoutMinutes' }
+      }
+    },
+    { $project: { _id: 0, steps: 1, calories: 1, workoutMinutes: 1 } }
+  ];
+
+  const [totalsDoc] = await Activity.aggregate(pipeline);
+  const totals = totalsDoc || { steps: 0, calories: 0, workoutMinutes: 0 };
+  return {
+    range: { start, end },
+    totals
+  };
+}
+
 const getWeeklyStats = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -8,7 +36,7 @@ const getWeeklyStats = async (req, res) => {
     const now = new Date();
     const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
     const start = new Date(end);
-    start.setUTCDate(end.getUTCDate() - 6); // 7-day
+    start.setUTCDate(end.getUTCDate() - 6); // 7 day
 
     const pipeline = [
       { $match: { user: new mongoose.Types.ObjectId(userId), date: { $gte: start, $lte: end } } },
@@ -66,6 +94,6 @@ const getWeeklyStats = async (req, res) => {
   }
 };
 
-module.exports = { getWeeklyStats };
+module.exports = { getWeeklyStats, weeklyData };
 
 
