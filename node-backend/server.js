@@ -9,6 +9,7 @@ const connectDB = require('./config/database');
 const { configureCloudinary } = require('./config/cloudinary');
 
 const routes = require('./routes');
+const { scheduleWeeklySummary } = require('./cron/weeklySummary');
 
 const errorHandler = require('./middleware/errorHandler');
 
@@ -17,8 +18,8 @@ configureCloudinary();
 
 const app = express();
 
-// Security middleware
 app.use(helmet());
+
 // Content Security Policy to allow Chart.js CDN and Google Fonts used by analytics page
 app.use(helmet.contentSecurityPolicy({
   useDefaults: true,
@@ -94,6 +95,9 @@ const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
   console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  if (process.env.ENABLE_WEEKLY_SUMMARY === 'true') {
+    scheduleWeeklySummary();
+  }
 });
 
 module.exports = app;

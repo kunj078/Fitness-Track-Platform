@@ -116,3 +116,32 @@ All errors return a consistent JSON format:
 4. **Rate Limiting**: Adjust rate limits based on your needs
 5. **Monitoring**: Implement proper logging and monitoring
 6. **Security**: Regular security updates and audits
+
+## Weekly Summary Emails (Node Backend)
+
+The backend can send weekly summary emails using Nodemailer and a cron schedule.
+
+Environment variables (single `.env` file):
+
+```
+ENABLE_WEEKLY_SUMMARY=true
+WEEKLY_SUMMARY_CRON=0 9 * * 1
+CRON_TZ=UTC
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your_smtp_username
+SMTP_PASS=your_smtp_password
+EMAIL_FROM=Fitness Track <no-reply@example.com>
+```
+
+Notes:
+- `WEEKLY_SUMMARY_CRON` defaults to `0 9 * * 1` (Mondays at 09:00) if not set.
+- `CRON_TZ` defaults to `UTC`.
+- Emails are sent to all active users (`isActive: true`).
+
+Manual run (one-off) within the app context for testing:
+
+```js
+const { weeklyScheduler } = require('./node-backend/cron/weeklySummary');
+await weeklyScheduler();
+```
