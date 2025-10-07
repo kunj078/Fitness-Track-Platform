@@ -1,0 +1,11 @@
+.git
+.gitignore
+.target
+build
+.gradle
+.mvn/wrapper/maven-wrapper.jar
+node_modules
+Dockerfile
+docker-compose.yml
+*.iml
+.idea
