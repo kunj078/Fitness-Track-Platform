@@ -19,7 +19,7 @@ public class DailyReminderScheduler {
     private boolean enabled;
 
     // Endpoint on Node.js backend that returns list of {name,email}
-    @Value("${app.backend.reminderListUrl:http://localhost:5000/api/reminders/today}")
+    @Value("${app.backend.reminderListUrl:https://fitness-track-platform-node.onrender.com/api/reminders/today}")
     private String reminderListUrl;
 
     public DailyReminderScheduler(EmailService emailService, UserRepository userRepository) {
@@ -27,7 +27,6 @@ public class DailyReminderScheduler {
         this.userRepository = userRepository;
     }
 
-    // Runs every 20 seconds by default
     @Scheduled(cron = "${app.scheduler.cron:0 57 23 * * *}")
     public void runDaily() {
         if (!enabled) {

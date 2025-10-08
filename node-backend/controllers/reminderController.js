@@ -24,7 +24,7 @@ const sendNow = async (req, res) => {
       }
     }
     // Forward to Spring Boot Code
-    const url = process.env.REMINDER_SERVICE_URL || 'http://localhost:8081/api/reminders/send';
+    const url = process.env.REMINDER_SERVICE_URL || 'https://fitness-track-platform.onrender.com/api/reminders/send';
     const response = await axios.post(url, payload, { timeout: 10000 });
     res.status(200).json({ success: true, forwarded: payload.length, springResponse: response.data });
   } catch (e) {
