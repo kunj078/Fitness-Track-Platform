@@ -87,6 +87,9 @@ const getActivities = async (req, res) => {
   try {
     const userId = req.user.id;
     const { from, to } = req.query;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
     const query = { user: userId };
     if (from || to) {
@@ -95,8 +98,26 @@ const getActivities = async (req, res) => {
       if (to) query.date.$lte = normalizeDate(to);
     }
 
-    const activities = await Activity.find(query).sort({ date: -1 });
-    res.status(200).json({ success: true, count: activities.length, data: activities });
+    const [total, activities] = await Promise.all([
+      Activity.countDocuments(query),
+      Activity.find(query)
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(limit)
+    ]);
+
+    const totalPages = Math.ceil(total / limit) || 1;
+
+    res.status(200).json({
+      success: true,
+      data: activities,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+      }
+    });
   } catch (error) {
     console.error('Get activities error:', error);
     res.status(500).json({ success: false, message: 'Server error fetching activities' });
