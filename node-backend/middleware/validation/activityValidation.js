@@ -20,6 +20,8 @@ const validateActivityUpdate = [
 const validateActivityQuery = [
   query('from').optional().isISO8601().withMessage('from must be a valid date'),
   query('to').optional().isISO8601().withMessage('to must be a valid date'),
+  query('page').optional().isInt({ min: 1 }).toInt().withMessage('page must be a positive integer'),
+  query('limit').optional().isInt({ min: 1, max: 100 }).toInt().withMessage('limit must be between 1 and 100'),
   handleValidationErrors
 ];
 
