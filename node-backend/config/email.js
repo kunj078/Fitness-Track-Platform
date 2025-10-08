@@ -1,42 +1,59 @@
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 
-function parseBoolean(value, fallback) {
-  if (value === undefined) return fallback;
-  return String(value).toLowerCase() === 'true';
-}
-
-function createTransport() {
-  const host = process.env.SMTP_HOST;
-  const port = Number(process.env.SMTP_PORT || 587);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-
-  if (!host || !user || !pass) {
-    console.warn('Email transport not fully configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS');
-  }
-
-  const transportOptions = {
-    host,
-    port,
-    // secure,
-    auth: user && pass ? { user, pass } : undefined,
-  };
-
-  const transporter = nodemailer.createTransport(transportOptions);
-
-  return transporter;
+const apiKey = process.env.SENDGRID_API_KEY;
+if (!apiKey) {
+  console.warn('SendGrid API key not configured. Set SENDGRID_API_KEY environment variable');
+} else {
+  sgMail.setApiKey(apiKey);
 }
 
 async function verifyTransport() {
-  const transporter = createTransport();
-  await transporter.verify();
+  if (!apiKey) {
+    throw new Error('SendGrid API key not configured');
+  }
+
+  try {
+    await sgMail.send({
+      to: 'test@example.com',
+      from: process.env.EMAIL_FROM || 'no-reply@fitnesstrack.local',
+      subject: 'Test',
+      text: 'Test',
+      mailSettings: {
+        sandboxMode: {
+          enable: true
+        }
+      }
+    });
+  } catch (error) {
+    if (error.code === 401) {
+      throw new Error('Invalid SendGrid API key');
+    }
+    // Other errors are expected in sandbox mode
+  }
 }
 
 async function sendEmail({ to, subject, html, text }) {
+  if (!apiKey) {
+    throw new Error('SendGrid API key not configured');
+  }
+
   const from = process.env.EMAIL_FROM || 'no-reply@fitnesstrack.local';
-  const transporter = createTransport();
-  return transporter.sendMail({ from, to, subject, html, text });
+  
+  const msg = {
+    to,
+    from,
+    subject,
+    text,
+    html
+  };
+
+  try {
+    const response = await sgMail.send(msg);
+    return response;
+  } catch (error) {
+    console.error('SendGrid error:', error);
+    throw error;
+  }
 }
 
-module.exports = { createTransport, verifyTransport, sendEmail };
-
+module.exports = { verifyTransport, sendEmail };
