@@ -1,9 +1,29 @@
 const Activity = require('../models/Activity');
+const cache = require('../utils/cache');
 
 const normalizeDate = (dateInput) => {
   const d = new Date(dateInput || Date.now());
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 };
+
+function invalidateWeeklyStatsCache(userId, activityDate) {
+
+  const end = new Date(Date.UTC(activityDate.getUTCFullYear(), activityDate.getUTCMonth(), activityDate.getUTCDate()));
+  const start = new Date(end);
+  start.setUTCDate(end.getUTCDate() - 6);
+
+  const startStr = start.toISOString().split('T')[0];
+  const endStr = end.toISOString().split('T')[0];
+  
+  const weeklyStatsKey = `weekly_stats:${userId}:${startStr}:${endStr}`;
+  const weeklyDataKey = `weekly_data:${userId}:${startStr}:${endStr}`;
+  console.log("Invalidating cache keys weeklyStatsKey:", weeklyStatsKey, "weeklyDataKey: ",weeklyDataKey);
+  
+  cache.delete(weeklyStatsKey);
+  cache.delete(weeklyDataKey);
+  
+  console.log(`Cache invalidated for user ${userId} week ${startStr} to ${endStr}`);
+}
 
 const createActivity = async (req, res) => {
   try {
@@ -26,6 +46,9 @@ const createActivity = async (req, res) => {
       calories: req.body.calories,
       workoutMinutes: req.body.workoutMinutes
     });
+
+    // Invalidate weekly stats cache for this user and date
+    invalidateWeeklyStatsCache(userId, date);
 
     res.status(201).json({
       success: true,
@@ -59,6 +82,9 @@ const updateActivity = async (req, res) => {
       return res.status(404).json({ success: false, message: 'No activity found for this date' });
     }
 
+    // Invalidate weekly stats cache for this user and date
+    invalidateWeeklyStatsCache(userId, date);
+
     res.status(200).json({ success: true, message: 'Activity updated', data: activity });
   } catch (error) {
     console.error('Update activity error:', error);
@@ -75,6 +101,9 @@ const deleteActivity = async (req, res) => {
     if (!activity) {
       return res.status(404).json({ success: false, message: 'No activity found for this date' });
     }
+
+    // Invalidate weekly stats cache for this user and date
+    invalidateWeeklyStatsCache(userId, date);
 
     res.status(200).json({ success: true, message: 'Activity deleted' });
   } catch (error) {
